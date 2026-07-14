@@ -1,0 +1,18 @@
+{
+  "name": "smartshield",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "test": "pnpm -r test",
+    "prisma:migrate": "pnpm --filter api exec prisma migrate dev",
+    "prisma:seed": "pnpm --filter api exec prisma db seed",
+    "prisma:studio": "pnpm --filter api exec prisma studio"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

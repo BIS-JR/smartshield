@@ -1,0 +1,36 @@
+/*
+  Paleta travada do SmartShield (Fase 0). Tema único dark navy + azul,
+  conforme FUNCAO.PDF e TELAS.PDF. Não há variante light: o produto é
+  dark-only por especificação.
+
+  Regra de uso: cores de status/severidade nunca são reaproveitadas como
+  cor de módulo, e vice-versa.
+*/
+
+:root {
+  --background: #050b16;
+  --surface: #0c1526;
+  --surface-hover: #101c33;
+  --border: #1c2942;
+  --foreground: #e7ecf5;
+  --muted: #8a9ab0;
+
+  --primary: #3b82f6;
+  --primary-foreground: #f5f9ff;
+
+  /* Status / severidade (reservado, não usar como cor de módulo) */
+  --status-good: #16a34a;
+  --status-info: #3987e5;
+  --status-warning: #fab219;
+  --status-serious: #f2843c;
+  --status-critical: #e0453f;
+
+  /* Cor fixa por módulo (reservado, não usar como cor de status) */
+  --module-document-ai: #3987e5;
+  --module-corporate-fraud: #9085e9;
+  --module-payment-risk: #199e70;
+  --module-supplier-intelligence: #d95926;
+  --module-investigation: #1fb5c9;
+  --module-executive-dashboard: #d55181;
+  --module-rules-engine: #a86b1f;
+}

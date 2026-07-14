@@ -1,0 +1,776 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum UserRole {
+  admin
+  analyst
+  viewer
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum OtpPurpose {
+  signup
+  login
+  password_reset
+}
+
+enum AuthEventType {
+  login_success
+  login_failed
+  google_login
+  otp_sent
+  otp_verified
+  password_reset_requested
+  password_reset_completed
+  two_factor_enabled
+  two_factor_disabled
+  logout
+}
+
+enum TwoFactorEventType {
+  setup_started
+  enabled
+  disabled
+  verified
+  failed_attempt
+}
+
+enum Severity {
+  leve
+  moderado
+  grave
+}
+
+enum CaseStatus {
+  aprovado
+  rejeitado
+  aguardando
+}
+
+enum DocumentCategory {
+  rg_falso
+  cnh
+  procuracoes
+  contratos
+  notas_fiscais
+  balancos
+  adulteracoes
+  documentos_ia
+}
+
+enum CaseAction {
+  bloquear
+  liberar
+  created
+  auto_evaluated
+}
+
+enum CorporateCategory {
+  empresas
+  socios
+  cpf
+  cnpj
+  pix
+  ip
+  dispositivo
+  telefone
+  contas_bancarias
+  fornecedores
+  outros
+}
+
+enum GraphNodeType {
+  empresa
+  pessoa
+  banco
+  conta
+  ip
+  dispositivo
+}
+
+enum ReportType {
+  rede_relacionamentos
+  nos_suspeitos
+  casca_cebola
+}
+
+enum ReportStatus {
+  queued
+  sent
+  failed
+}
+
+enum AutomationTriggerType {
+  congelar_pix_ted
+}
+
+enum AutomationStatus {
+  triggered
+  confirmed
+  failed
+}
+
+enum PaymentType {
+  pix
+  ted
+  doc
+  boleto
+}
+
+enum RiskLevel {
+  baixo
+  medio
+  alto
+}
+
+enum PaymentStatus {
+  aprovada
+  bloqueada
+  suspeita
+}
+
+enum SupplierCategory {
+  processos_judiciais
+  protestos_cartorio
+  nfe_fantasmas
+  historico_fiscal
+  fornecedores_suspeitos
+  triangulacao_nfe
+}
+
+enum BlockStatus {
+  ativo
+  em_analise
+  liberado
+}
+
+enum SourceRecordType {
+  document_case
+  corporate_entity
+  payment_transaction
+  supplier_alert
+}
+
+enum MessageSender {
+  user
+  assistant
+}
+
+enum MessageType {
+  briefing
+  question
+  answer
+  system
+}
+
+enum UnblockStatus {
+  requested
+  approved
+  rejected
+}
+
+enum RuleAction {
+  bloquear
+  revisar
+  alertar
+}
+
+enum RuleEventAction {
+  created
+  updated
+  activated
+  deactivated
+  deleted
+}
+
+// ---------- Autenticação ----------
+
+model User {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  email             String    @unique
+  passwordHash      String?   @map("password_hash")
+  avatarUrl         String?   @map("avatar_url")
+  role              UserRole  @default(analyst)
+  status            UserStatus @default(active)
+  googleId          String?   @unique @map("google_id")
+  twoFactorEnabled  Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret   String?   @map("two_factor_secret")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  refreshTokens        RefreshToken[]
+  otpCodes             OtpCode[]
+  passwordResetTokens  PasswordResetToken[]
+  authEvents           AuthEvent[]
+  twoFactorEvents      TwoFactorEvent[]
+  decidedDocumentCases DocumentCase[]        @relation("DocumentCaseDecidedBy")
+  documentCaseEvents   DocumentCaseEvent[]
+  decidedCorpEntities  CorporateEntity[]     @relation("CorporateEntityDecidedBy")
+  corpEntityEvents     CorporateEntityEvent[]
+  graphReportRequests  GraphReportRequest[]
+  automationTriggers   AutomationTrigger[]
+  paymentTxEvents      PaymentTransactionEvent[]
+  decidedSupplierAlerts SupplierAlert[]      @relation("SupplierAlertDecidedBy")
+  supplierAlertEvents  SupplierAlertEvent[]
+  supplierReportRequests SupplierReportRequest[]
+  liberatedBlocks      Block[]               @relation("BlockLiberatedBy")
+  blockEvents          BlockEvent[]
+  unblockRequests      UnblockRequest[]
+  createdRules         Rule[]
+  ruleEvents           RuleEvent[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash")
+  userAgent String?   @map("user_agent")
+  ip        String?
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, expiresAt])
+  @@map("refresh_tokens")
+}
+
+model OtpCode {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String?    @map("user_id") @db.Uuid
+  email     String
+  codeHash  String     @map("code_hash")
+  purpose   OtpPurpose
+  expiresAt DateTime   @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  attempts  Int        @default(0)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([email, purpose, expiresAt])
+  @@map("otp_codes")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_reset_tokens")
+}
+
+model AuthEvent {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String?       @map("user_id") @db.Uuid
+  eventType AuthEventType @map("event_type")
+  ip        String?
+  userAgent String?       @map("user_agent")
+  metadata  Json?
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("auth_events")
+}
+
+model TwoFactorEvent {
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  eventType TwoFactorEventType  @map("event_type")
+  metadata  Json?
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("two_factor_events")
+}
+
+// ---------- Catálogo de módulos ----------
+
+model Module {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  name        String
+  description String?
+  icon        String
+  color       String
+  sortOrder   Int      @map("sort_order")
+
+  blocks Block[]
+  rules  Rule[]
+
+  @@map("modules")
+}
+
+// ---------- Document AI Engine ----------
+
+model DocumentCase {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caseNumber      String           @unique @map("case_number")
+  title           String
+  category        DocumentCategory
+  severity        Severity
+  status          CaseStatus
+  requesterName   String           @map("requester_name")
+  requesterEmail  String           @map("requester_email")
+  requesterCpf    String           @map("requester_cpf")
+  documentUrl     String?          @map("document_url")
+  fraudReason     String?          @map("fraud_reason")
+  confidenceScore Decimal          @map("confidence_score") @db.Decimal(5, 2)
+  decidedAt       DateTime?        @map("decided_at")
+  decidedById     String?          @map("decided_by") @db.Uuid
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  decidedBy User?               @relation("DocumentCaseDecidedBy", fields: [decidedById], references: [id])
+  events    DocumentCaseEvent[]
+
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@index([createdAt])
+  @@map("document_cases")
+}
+
+model DocumentCaseEvent {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentCaseId String       @map("document_case_id") @db.Uuid
+  actorId        String?      @map("actor_id") @db.Uuid
+  fromStatus     CaseStatus?  @map("from_status")
+  toStatus       CaseStatus   @map("to_status")
+  action         CaseAction
+  reason         String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  documentCase DocumentCase @relation(fields: [documentCaseId], references: [id])
+  actor        User?        @relation(fields: [actorId], references: [id])
+
+  @@index([documentCaseId, createdAt(sort: Desc)])
+  @@map("document_case_events")
+}
+
+// ---------- Corporate Fraud Graph ----------
+
+model CorporateEntity {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entityNumber    String            @unique @map("entity_number")
+  title           String
+  docNumber       String?           @map("doc_number")
+  category        CorporateCategory
+  severity        Severity
+  status          CaseStatus
+  layersCount     Int               @default(0) @map("layers_count")
+  uboIdentified   Boolean           @default(false) @map("ubo_identified")
+  uboName         String?           @map("ubo_name")
+  confidenceScore Decimal           @map("confidence_score") @db.Decimal(5, 2)
+  decidedAt       DateTime?         @map("decided_at")
+  decidedById     String?           @map("decided_by") @db.Uuid
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  decidedBy      User?                  @relation("CorporateEntityDecidedBy", fields: [decidedById], references: [id])
+  events         CorporateEntityEvent[]
+  nodes          GraphNode[]
+  edges          GraphEdge[]
+  reportRequests GraphReportRequest[]
+  automations    AutomationTrigger[]
+
+  @@index([status])
+  @@index([category])
+  @@map("corporate_entities")
+}
+
+model CorporateEntityEvent {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  corporateEntityId String      @map("corporate_entity_id") @db.Uuid
+  actorId           String?     @map("actor_id") @db.Uuid
+  fromStatus        CaseStatus? @map("from_status")
+  toStatus          CaseStatus  @map("to_status")
+  action            CaseAction
+  reason            String?
+  createdAt         DateTime    @default(now()) @map("created_at")
+
+  corporateEntity CorporateEntity @relation(fields: [corporateEntityId], references: [id])
+  actor           User?           @relation(fields: [actorId], references: [id])
+
+  @@index([corporateEntityId, createdAt(sort: Desc)])
+  @@map("corporate_entity_events")
+}
+
+model GraphNode {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  corporateEntityId String        @map("corporate_entity_id") @db.Uuid
+  nodeType          GraphNodeType @map("node_type")
+  label             String
+  metadata          Json?
+  x                 Float?
+  y                 Float?
+
+  corporateEntity CorporateEntity @relation(fields: [corporateEntityId], references: [id])
+  outgoingEdges   GraphEdge[]     @relation("EdgeSource")
+  incomingEdges   GraphEdge[]     @relation("EdgeTarget")
+
+  @@index([corporateEntityId])
+  @@map("graph_nodes")
+}
+
+model GraphEdge {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  corporateEntityId String   @map("corporate_entity_id") @db.Uuid
+  sourceNodeId      String   @map("source_node_id") @db.Uuid
+  targetNodeId      String   @map("target_node_id") @db.Uuid
+  relationType      String   @map("relation_type")
+  weight            Float    @default(1)
+
+  corporateEntity CorporateEntity @relation(fields: [corporateEntityId], references: [id])
+  sourceNode      GraphNode       @relation("EdgeSource", fields: [sourceNodeId], references: [id])
+  targetNode      GraphNode       @relation("EdgeTarget", fields: [targetNodeId], references: [id])
+
+  @@index([corporateEntityId])
+  @@map("graph_edges")
+}
+
+model GraphReportRequest {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  corporateEntityId String       @map("corporate_entity_id") @db.Uuid
+  requestedById     String?      @map("requested_by") @db.Uuid
+  reportType        ReportType   @map("report_type")
+  recipientEmail    String       @map("recipient_email")
+  status            ReportStatus @default(queued)
+  sentAt            DateTime?    @map("sent_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
+
+  corporateEntity CorporateEntity @relation(fields: [corporateEntityId], references: [id])
+  requestedBy     User?           @relation(fields: [requestedById], references: [id])
+
+  @@index([corporateEntityId, createdAt(sort: Desc)])
+  @@map("graph_report_requests")
+}
+
+model AutomationTrigger {
+  id                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  corporateEntityId String                @map("corporate_entity_id") @db.Uuid
+  triggeredById     String?               @map("triggered_by") @db.Uuid
+  triggerType       AutomationTriggerType @map("trigger_type")
+  status            AutomationStatus
+  metadata          Json?
+  createdAt         DateTime              @default(now()) @map("created_at")
+
+  corporateEntity CorporateEntity @relation(fields: [corporateEntityId], references: [id])
+  triggeredBy     User?           @relation(fields: [triggeredById], references: [id])
+
+  @@index([corporateEntityId, createdAt(sort: Desc)])
+  @@map("automation_triggers")
+}
+
+// ---------- Payment Risk Engine ----------
+
+model PaymentTransaction {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  externalRef    String        @unique @map("external_ref")
+  type           PaymentType
+  amount         Decimal       @db.Decimal(14, 2)
+  riskLevel      RiskLevel     @map("risk_level")
+  status         PaymentStatus
+  description    String?
+  accountAgeDays Int?          @map("account_age_days")
+  destination    String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  events PaymentTransactionEvent[]
+
+  @@index([status, createdAt])
+  @@index([type])
+  @@map("payment_transactions")
+}
+
+model PaymentTransactionEvent {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentTransactionId  String         @map("payment_transaction_id") @db.Uuid
+  actorId               String?        @map("actor_id") @db.Uuid
+  fromStatus            PaymentStatus? @map("from_status")
+  toStatus              PaymentStatus  @map("to_status")
+  reason                String?
+  createdAt             DateTime       @default(now()) @map("created_at")
+
+  paymentTransaction PaymentTransaction @relation(fields: [paymentTransactionId], references: [id])
+  actor              User?              @relation(fields: [actorId], references: [id])
+
+  @@index([paymentTransactionId, createdAt(sort: Desc)])
+  @@map("payment_transaction_events")
+}
+
+model PaymentDailyMetric {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  metricDate         DateTime @unique @map("metric_date") @db.Date
+  totalTransactions  Int      @map("total_transactions")
+  blocked            Int
+  suspicious         Int
+  activeAutomations  Int      @map("active_automations")
+
+  @@map("payment_daily_metrics")
+}
+
+// ---------- Supplier Intelligence ----------
+
+model SupplierAlert {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  alertNumber    String           @unique @map("alert_number")
+  supplierName   String           @map("supplier_name")
+  supplierCnpj   String           @map("supplier_cnpj")
+  category       SupplierCategory
+  severity       Severity
+  status         CaseStatus
+  description    String?
+  evidence       Json?
+  confidenceScore Decimal         @map("confidence_score") @db.Decimal(5, 2)
+  decidedAt      DateTime?        @map("decided_at")
+  decidedById    String?          @map("decided_by") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  decidedBy      User?                    @relation("SupplierAlertDecidedBy", fields: [decidedById], references: [id])
+  events         SupplierAlertEvent[]
+  reportRequests SupplierReportRequest[]
+
+  @@index([status])
+  @@index([category])
+  @@map("supplier_alerts")
+}
+
+model SupplierAlertEvent {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplierAlertId String      @map("supplier_alert_id") @db.Uuid
+  actorId         String?     @map("actor_id") @db.Uuid
+  fromStatus      CaseStatus? @map("from_status")
+  toStatus        CaseStatus  @map("to_status")
+  action          CaseAction
+  reason          String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  supplierAlert SupplierAlert @relation(fields: [supplierAlertId], references: [id])
+  actor         User?         @relation(fields: [actorId], references: [id])
+
+  @@index([supplierAlertId, createdAt(sort: Desc)])
+  @@map("supplier_alert_events")
+}
+
+model SupplierReportRequest {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supplierAlertId String       @map("supplier_alert_id") @db.Uuid
+  requestedById   String?      @map("requested_by") @db.Uuid
+  recipientEmail  String       @map("recipient_email")
+  status          ReportStatus @default(queued)
+  sentAt          DateTime?    @map("sent_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  supplierAlert SupplierAlert @relation(fields: [supplierAlertId], references: [id])
+  requestedBy   User?         @relation(fields: [requestedById], references: [id])
+
+  @@index([supplierAlertId, createdAt(sort: Desc)])
+  @@map("supplier_report_requests")
+}
+
+// ---------- Investigation Assistant ----------
+
+model Block {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String           @unique
+  title            String
+  description      String?
+  severity         Severity
+  status           BlockStatus
+  sourceModuleId   String?          @map("source_module_id") @db.Uuid
+  sourceRecordType SourceRecordType @map("source_record_type")
+  sourceRecordId   String           @map("source_record_id") @db.Uuid
+  liberadoAt       DateTime?        @map("liberado_at")
+  liberadoById     String?          @map("liberado_by") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  sourceModule Module?               @relation(fields: [sourceModuleId], references: [id])
+  liberadoBy   User?                 @relation("BlockLiberatedBy", fields: [liberadoById], references: [id])
+  events       BlockEvent[]
+  briefing     InvestigationBriefing?
+  messages     InvestigationMessage[]
+  unblockRequests UnblockRequest[]
+
+  @@index([status])
+  @@index([sourceModuleId])
+  @@map("blocks")
+}
+
+model BlockEvent {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockId     String       @map("block_id") @db.Uuid
+  actorId     String?      @map("actor_id") @db.Uuid
+  fromStatus  BlockStatus? @map("from_status")
+  toStatus    BlockStatus  @map("to_status")
+  reason      String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  block Block @relation(fields: [blockId], references: [id])
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([blockId, createdAt(sort: Desc)])
+  @@map("block_events")
+}
+
+model InvestigationBriefing {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockId              String   @unique @map("block_id") @db.Uuid
+  whyBlocked           String   @map("why_blocked")
+  evidence             Json
+  history              Json
+  connections          Json
+  decisionExplanation  String   @map("decision_explanation")
+  recommendation       String
+  generatedAt          DateTime @default(now()) @map("generated_at")
+  generatorVersion     String   @default("simulated-v1") @map("generator_version")
+
+  block Block @relation(fields: [blockId], references: [id])
+
+  @@map("investigation_briefings")
+}
+
+model InvestigationMessage {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockId     String         @map("block_id") @db.Uuid
+  sender      MessageSender
+  content     String
+  messageType MessageType    @map("message_type")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  block Block @relation(fields: [blockId], references: [id])
+
+  @@index([blockId, createdAt])
+  @@map("investigation_messages")
+}
+
+model UnblockRequest {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blockId      String        @map("block_id") @db.Uuid
+  requestedById String?      @map("requested_by") @db.Uuid
+  reason       String?
+  status       UnblockStatus @default(requested)
+  resolvedAt   DateTime?     @map("resolved_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  block       Block @relation(fields: [blockId], references: [id])
+  requestedBy User? @relation(fields: [requestedById], references: [id])
+
+  @@index([blockId, createdAt(sort: Desc)])
+  @@map("unblock_requests")
+}
+
+// ---------- Executive Dashboard ----------
+
+model RegionRisk {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  regionCode     String    @map("region_code")
+  riskLevel      RiskLevel @map("risk_level")
+  incidentCount  Int       @map("incident_count")
+  percentage     Decimal   @db.Decimal(5, 2)
+  metricDate     DateTime  @map("metric_date") @db.Date
+
+  @@unique([regionCode, metricDate])
+  @@map("region_risk")
+}
+
+model ExecutiveKpiSnapshot {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  metricDate      DateTime @unique @map("metric_date") @db.Date
+  totalIncidents  Int      @map("total_incidents")
+  fraudsDetected  Int      @map("frauds_detected")
+  activeBlocks    Int      @map("active_blocks")
+  estimatedRoi    Decimal  @map("estimated_roi") @db.Decimal(14, 2)
+
+  @@map("executive_kpi_snapshots")
+}
+
+// ---------- Rules Engine ----------
+
+model Rule {
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId            String     @map("module_id") @db.Uuid
+  name                String
+  description         String?
+  conditionExpression String     @map("condition_expression")
+  threshold           Decimal?   @db.Decimal(14, 2)
+  outputSeverity      Severity   @map("output_severity")
+  action              RuleAction
+  isActive            Boolean    @default(true) @map("is_active")
+  createdById         String?    @map("created_by") @db.Uuid
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  module     Module          @relation(fields: [moduleId], references: [id])
+  createdBy  User?           @relation(fields: [createdById], references: [id])
+  events     RuleEvent[]
+  executions RuleExecution[]
+
+  @@index([moduleId])
+  @@map("rules")
+}
+
+model RuleEvent {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ruleId      String          @map("rule_id") @db.Uuid
+  actorId     String?         @map("actor_id") @db.Uuid
+  action      RuleEventAction
+  beforeState Json?           @map("before_state")
+  afterState  Json?           @map("after_state")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  rule  Rule  @relation(fields: [ruleId], references: [id])
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([ruleId, createdAt(sort: Desc)])
+  @@map("rule_events")
+}
+
+model RuleExecution {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ruleId           String   @map("rule_id") @db.Uuid
+  targetRecordType String   @map("target_record_type")
+  targetRecordId   String   @map("target_record_id") @db.Uuid
+  matched          Boolean
+  evaluatedAt      DateTime @default(now()) @map("evaluated_at")
+
+  rule Rule @relation(fields: [ruleId], references: [id])
+
+  @@index([ruleId, evaluatedAt(sort: Desc)])
+  @@map("rule_executions")
+}
+
+// ---------- Suporte a IA plugável ----------
+
+model SimulationSeed {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleKey String @map("module_key")
+  seedKey   String @map("seed_key")
+  seedValue Json   @map("seed_value")
+
+  @@unique([moduleKey, seedKey])
+  @@map("simulation_seeds")
+}
