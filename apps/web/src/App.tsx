@@ -16,12 +16,10 @@ import { CorporateFraudDetailPage } from '@/app/corporate-fraud/CorporateFraudDe
 import { PaymentRiskPage } from '@/app/payment-risk/PaymentRiskPage';
 import { PaymentRiskAlertDetailPage } from '@/app/payment-risk/PaymentRiskAlertDetailPage';
 import { ExecutiveDashboardPage } from '@/app/executive-dashboard/ExecutiveDashboardPage';
+import { InvestigationPage } from '@/app/investigation/InvestigationPage';
 import { useBootstrapSession } from '@/app/useBootstrapSession';
 
-const PLACEHOLDER_MODULES = [
-  { path: '/investigation', key: 'investigation' },
-  { path: '/rules-engine', key: 'rules_engine' },
-];
+const PLACEHOLDER_MODULES = [{ path: '/rules-engine', key: 'rules_engine' }];
 
 function App() {
   useBootstrapSession();
@@ -46,6 +44,7 @@ function App() {
         <Route path="/payment-risk" element={<PaymentRiskPage />} />
         <Route path="/payment-risk/alertas/:id" element={<PaymentRiskAlertDetailPage />} />
         <Route path="/executive-dashboard" element={<ExecutiveDashboardPage />} />
+        <Route path="/investigation" element={<InvestigationPage />} />
         {PLACEHOLDER_MODULES.map(({ path, key }) => (
           <Route key={path} path={path} element={<ModulePlaceholder moduleKey={key} />} />
         ))}
