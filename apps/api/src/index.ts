@@ -11,6 +11,7 @@ import { documentAiRouter } from './modules/document-ai/routes.js';
 import { supplierIntelligenceRouter } from './modules/supplier-intelligence/routes.js';
 import { corporateFraudRouter } from './modules/corporate-fraud/routes.js';
 import { paymentRiskRouter } from './modules/payment-risk/routes.js';
+import { executiveDashboardRouter } from './modules/executive-dashboard/routes.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/document-ai', documentAiRouter);
 app.use('/api/supplier-intelligence', supplierIntelligenceRouter);
 app.use('/api/corporate-fraud', corporateFraudRouter);
 app.use('/api/payment-risk', paymentRiskRouter);
+app.use('/api/executive-dashboard', executiveDashboardRouter);
 
 app.use(errorHandler);
 
