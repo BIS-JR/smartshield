@@ -46,7 +46,7 @@ async function loadSource(sourceRecordType: SourceRecordType, sourceRecordId: st
       const alert = await prisma.supplierAlert.findUnique({ where: { id: sourceRecordId } });
       if (!alert) return null;
       return {
-        title: alert.description,
+        title: alert.description ?? alert.supplierName,
         requesterOrHolder: alert.supplierName,
         reasonText: alert.description,
         evidence: Array.isArray(alert.evidence) ? (alert.evidence as string[]) : [],

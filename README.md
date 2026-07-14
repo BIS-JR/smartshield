@@ -32,8 +32,30 @@ pnpm dev:web   # http://localhost:5173
 
 `apps/api/.env` é copiado de `.env.example` com credenciais de exemplo. Login via Google e envio de e-mail (OTP) só funcionam de verdade depois de preencher `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` e `SMTP_*` com credenciais reais; até lá, o fluxo funciona com esses valores fictícios para desenvolvimento.
 
+## Testes
+
+```bash
+pnpm --filter api test   # Vitest + Supertest (unitários + integração contra o app real)
+pnpm --filter web test   # Vitest + Testing Library
+```
+
 ## Estado atual
 
-Fase 0 concluída: monorepo, banco com as 33 tabelas (transacionais + histórico) migrado e catálogo de módulos seedado, tokens visuais travados, esqueleto do frontend (Vite+React+Tailwind+PWA) e do backend (Express+Prisma) rodando e conversando com o banco.
+Todas as 11 fases do plano de implementação concluídas:
 
-Próximas fases (autenticação, telas dos módulos etc.) seguem a ordem definida no plano de implementação.
+- **Fase 0** — monorepo, banco com as 33+ tabelas (transacionais + histórico), catálogo de módulos, tokens visuais, PWA
+- **Fase 1** — autenticação completa (login, cadastro+OTP, esqueci/redefinir senha, Google OAuth, 2FA), Landing Page
+- **Fase 2** — AppShell (header, drawer, SwipeNav), Painel Geral
+- **Fase 3-6** — Document AI Engine, Supplier Intelligence, Corporate Fraud Graph (grafo de rede D3 interativo), Payment Risk Engine
+- **Fase 7** — Executive Dashboard (KPIs e tendências agregados dos módulos reais)
+- **Fase 8** — Investigation Assistant (bloqueios derivados de registros reais, briefing automático, chat)
+- **Fase 9** — Rules Engine (CRUD completo, condições avaliadas de verdade via `expr-eval`)
+- **Fase 10** — tela de Segurança/2FA, code-splitting por rota, ícones do PWA, testes automatizados
+
+Todos os dados de demonstração são gerados por um motor de decisão determinístico (mesma entidade sempre produz o mesmo resultado), não são números fixos — ver `apps/api/src/lib/decisionEngine.ts`.
+
+### Limitações conhecidas
+
+- Login via Google e envio de e-mail (OTP) usam credenciais de exemplo até você preencher `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` e `SMTP_*` em `apps/api/.env` com valores reais.
+- As regras do Rules Engine são avaliadas sob demanda (botão "testar regra" contra dados existentes); ainda não há um pipeline de avaliação automática toda vez que um caso novo é criado, já que os módulos não têm uma tela de "criar novo caso" (todos os dados de demonstração vêm do seed).
+- Rede de Parceiros ONCLICK (CRM/funil, app separado descrito no FUNCAO.PDF) ficou fora de escopo desta entrega, por decisão combinada no planejamento.

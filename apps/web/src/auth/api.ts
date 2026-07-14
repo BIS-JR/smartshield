@@ -66,3 +66,18 @@ export async function meRequest() {
   const { data } = await api.get<{ user: AuthUser }>('/auth/me');
   return data.user;
 }
+
+export async function setupTwoFactorRequest() {
+  const { data } = await api.post<{ qrCodeDataUrl: string; secret: string }>('/auth/2fa/setup');
+  return data;
+}
+
+export async function confirmTwoFactorRequest(token: string) {
+  const { data } = await api.post<{ enabled: boolean }>('/auth/2fa/confirm', { token });
+  return data;
+}
+
+export async function disableTwoFactorRequest(token: string) {
+  const { data } = await api.post<{ enabled: boolean }>('/auth/2fa/disable', { token });
+  return data;
+}
