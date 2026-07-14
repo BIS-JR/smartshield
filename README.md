@@ -20,6 +20,7 @@ packages/shared → tipos/schemas compartilhados (futuro)
 
 ```bash
 pnpm install
+pnpm build:shared   # compila packages/shared (necessário mesmo em dev, api/web importam o JS compilado)
 
 # banco (primeira vez ou após alterar o schema)
 pnpm prisma:migrate
@@ -38,6 +39,20 @@ pnpm dev:web   # http://localhost:5173
 pnpm --filter api test   # Vitest + Supertest (unitários + integração contra o app real)
 pnpm --filter web test   # Vitest + Testing Library
 ```
+
+## Deploy (Render, tudo num único serviço)
+
+O repositório já inclui um `render.yaml` (Render Blueprint) que provisiona o web service e o banco Postgres automaticamente:
+
+1. Crie uma conta em [render.com](https://render.com) e conecte sua conta do GitHub.
+2. No dashboard, clique em **New > Blueprint** e selecione o repositório `BIS-JR/smartshield`.
+3. O Render lê o `render.yaml`, cria o banco `smartshield-db` e o serviço web `smartshield`, gerando sozinho os segredos JWT.
+4. Depois do primeiro deploy, copie a URL atribuída (ex: `https://smartshield.onrender.com`) e preencha a variável `WEB_ORIGIN` com esse valor no painel do serviço (Environment).
+5. Pronto. A cada `git push` para `main`, o Render reconstrói e reimplanta automaticamente. O banco é migrado (`prisma migrate deploy`) e semeado com os dados de demonstração a cada start (idempotente, não duplica dados).
+
+Backend e frontend ficam no mesmo domínio (o Express serve os arquivos estáticos do build do Vite), então não há CORS nem cookie cross-site para se preocupar. Login via Google e envio de e-mail continuam simulados até você preencher `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`SMTP_*` no painel do Render.
+
+No plano gratuito o serviço "dorme" após um período de inatividade e demora alguns segundos para acordar na primeira visita seguinte; para ficar sempre ativo, mude o plano do web service para o pago (a partir de ~US$ 7/mês). Confira os termos atuais do plano gratuito de banco de dados no próprio Render antes de depender dele a longo prazo, já que esse tipo de política muda com frequência.
 
 ## Estado atual
 

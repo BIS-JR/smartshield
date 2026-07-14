@@ -5,8 +5,10 @@
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api dev",
+    "build:shared": "pnpm --filter @smartshield/shared build",
     "build:web": "pnpm --filter web build",
     "build:api": "pnpm --filter api build",
+    "build": "pnpm build:shared && pnpm build:web && pnpm build:api",
     "test": "pnpm -r test",
     "prisma:migrate": "pnpm --filter api exec prisma migrate dev",
     "prisma:seed": "pnpm --filter api exec prisma db seed",

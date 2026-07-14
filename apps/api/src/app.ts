@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { env } from './config/env.js';
 import { prisma } from './db/prisma.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -14,6 +17,11 @@ import { paymentRiskRouter } from './modules/payment-risk/routes.js';
 import { executiveDashboardRouter } from './modules/executive-dashboard/routes.js';
 import { investigationRouter } from './modules/investigation/routes.js';
 import { rulesEngineRouter } from './modules/rules-engine/routes.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Em produção o build roda a partir de apps/api/dist/app.js, então o
+// frontend compilado fica em ../../web/dist relativo a este arquivo.
+const webDistDir = path.join(__dirname, '..', '..', 'web', 'dist');
 
 export function createApp() {
   const app = express();
@@ -37,6 +45,18 @@ export function createApp() {
   app.use('/api/executive-dashboard', executiveDashboardRouter);
   app.use('/api/investigation', investigationRouter);
   app.use('/api/rules-engine', rulesEngineRouter);
+
+  // Serve o frontend compilado no mesmo domínio da API (deploy "tudo
+  // junto"), quando o build do web existir. Em desenvolvimento local o
+  // frontend roda separado via Vite, então esse diretório não existe e o
+  // bloco inteiro é ignorado.
+  if (fs.existsSync(webDistDir)) {
+    app.use(express.static(webDistDir));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) return next();
+      res.sendFile(path.join(webDistDir, 'index.html'));
+    });
+  }
 
   app.use(errorHandler);
 

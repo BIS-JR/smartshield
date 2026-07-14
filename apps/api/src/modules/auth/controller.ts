@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as authService from './service.js';
 import { rotateRefreshToken, revokeRefreshToken } from './tokens.js';
 import { HttpError } from '../../middleware/errorHandler.js';
+import { env } from '../../config/env.js';
 
 const REFRESH_COOKIE = 'smartshield_refresh';
 
@@ -14,7 +15,7 @@ function setRefreshCookie(res: Response, token: string) {
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false,
+    secure: env.isProduction,
     path: '/api/auth',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
@@ -81,7 +82,7 @@ export async function logoutHandler(req: Request, res: Response) {
   if (token) {
     await revokeRefreshToken(token);
   }
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth', secure: env.isProduction, sameSite: 'lax' });
   if (req.userId) {
     const { logAuthEvent } = await import('./authEvents.js');
     await logAuthEvent('logout', { userId: req.userId, ...meta(req) });

@@ -10,6 +10,7 @@ function required(name: string): string {
 
 export const env = {
   port: Number(process.env.PORT ?? 4000),
+  isProduction: process.env.NODE_ENV === 'production',
   databaseUrl: required('DATABASE_URL'),
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:5173',
   jwt: {
