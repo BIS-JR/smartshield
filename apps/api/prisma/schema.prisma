@@ -488,16 +488,24 @@ model AutomationTrigger {
 // ---------- Payment Risk Engine ----------
 
 model PaymentTransaction {
-  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  externalRef    String        @unique @map("external_ref")
-  type           PaymentType
-  amount         Decimal       @db.Decimal(14, 2)
-  riskLevel      RiskLevel     @map("risk_level")
-  status         PaymentStatus
-  description    String?
-  accountAgeDays Int?          @map("account_age_days")
-  destination    String?
-  createdAt      DateTime      @default(now()) @map("created_at")
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  externalRef       String        @unique @map("external_ref")
+  type              PaymentType
+  amount            Decimal       @db.Decimal(14, 2)
+  riskLevel         RiskLevel     @map("risk_level")
+  status            PaymentStatus
+  description       String?
+  accountAgeDays    Int?          @map("account_age_days")
+  destination       String?
+  holderName        String?       @map("holder_name")
+  holderDocument    String?       @map("holder_document")
+  holderEmail       String?       @map("holder_email")
+  originCity        String?       @map("origin_city")
+  originState       String?       @map("origin_state")
+  originCountry     String?       @default("BR") @map("origin_country")
+  originIp          String?       @map("origin_ip")
+  threatDescription String?       @map("threat_description")
+  createdAt         DateTime      @default(now()) @map("created_at")
 
   events PaymentTransactionEvent[]
 

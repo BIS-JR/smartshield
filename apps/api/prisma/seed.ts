@@ -1,5 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { seedDocumentAi } from './seeds/documentAi.js';
+import { seedSupplierIntelligence } from './seeds/supplierIntelligence.js';
+import { seedCorporateFraud } from './seeds/corporateFraud.js';
+import { seedPaymentRisk } from './seeds/paymentRisk.js';
 
 const prisma = new PrismaClient();
 
@@ -74,6 +77,9 @@ async function main() {
   console.log(`Seed concluído: ${modules.length} módulos.`);
 
   await seedDocumentAi(prisma);
+  await seedSupplierIntelligence(prisma);
+  await seedCorporateFraud(prisma);
+  await seedPaymentRisk(prisma);
 }
 
 main()

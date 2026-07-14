@@ -22,7 +22,17 @@ interface ModuleListPageProps<T> {
   items?: T[];
   isLoading: boolean;
   listLabel: string;
-  renderRow: (item: T) => { key: string; to: string; title: string; categoryLabel: string; severity: string; status: string; date: string };
+  renderRow: (item: T) => {
+    key: string;
+    to: string;
+    title: string;
+    categoryLabel: string;
+    severity: string;
+    status: string;
+    date: string;
+    leadingIcon?: LucideIcon;
+    leadingIconColor?: string;
+  };
 }
 
 export function ModuleListPage<T>({

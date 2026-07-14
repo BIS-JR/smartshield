@@ -8,6 +8,9 @@ import { authRouter } from './modules/auth/routes.js';
 import { catalogRouter } from './modules/catalog/routes.js';
 import { dashboardRouter } from './modules/dashboard/routes.js';
 import { documentAiRouter } from './modules/document-ai/routes.js';
+import { supplierIntelligenceRouter } from './modules/supplier-intelligence/routes.js';
+import { corporateFraudRouter } from './modules/corporate-fraud/routes.js';
+import { paymentRiskRouter } from './modules/payment-risk/routes.js';
 
 const app = express();
 
@@ -24,6 +27,9 @@ app.use('/api/auth', authRouter);
 app.use('/api/modules', catalogRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/document-ai', documentAiRouter);
+app.use('/api/supplier-intelligence', supplierIntelligenceRouter);
+app.use('/api/corporate-fraud', corporateFraudRouter);
+app.use('/api/payment-risk', paymentRiskRouter);
 
 app.use(errorHandler);
 

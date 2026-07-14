@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { CategoryBadge } from '@/components/badges/CategoryBadge';
 import { SeverityBadge } from '@/components/badges/SeverityBadge';
 import { StatusBadge } from '@/components/badges/StatusBadge';
@@ -11,17 +12,22 @@ interface EntityListRowProps {
   severity: string;
   status: string;
   date: string;
+  leadingIcon?: LucideIcon;
+  leadingIconColor?: string;
 }
 
-export function EntityListRow({ to, title, categoryLabel, severity, status, date }: EntityListRowProps) {
+export function EntityListRow({ to, title, categoryLabel, severity, status, date, leadingIcon: LeadingIcon, leadingIconColor }: EntityListRowProps) {
   return (
     <div className="flex flex-col gap-2 border-b border-border py-4 last:border-none sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="font-medium text-foreground">{title}</p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <CategoryBadge label={categoryLabel} />
-          <SeverityBadge severity={severity} />
-          <StatusBadge status={status} />
+      <div className="flex items-start gap-2.5">
+        {LeadingIcon && <LeadingIcon className="mt-0.5 h-4 w-4 shrink-0" style={{ color: leadingIconColor }} />}
+        <div>
+          <p className="font-medium text-foreground">{title}</p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <CategoryBadge label={categoryLabel} />
+            <SeverityBadge severity={severity} />
+            <StatusBadge status={status} />
+          </div>
         </div>
       </div>
 
