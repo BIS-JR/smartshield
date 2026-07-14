@@ -13,6 +13,7 @@ import { corporateFraudRouter } from './modules/corporate-fraud/routes.js';
 import { paymentRiskRouter } from './modules/payment-risk/routes.js';
 import { executiveDashboardRouter } from './modules/executive-dashboard/routes.js';
 import { investigationRouter } from './modules/investigation/routes.js';
+import { rulesEngineRouter } from './modules/rules-engine/routes.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/corporate-fraud', corporateFraudRouter);
 app.use('/api/payment-risk', paymentRiskRouter);
 app.use('/api/executive-dashboard', executiveDashboardRouter);
 app.use('/api/investigation', investigationRouter);
+app.use('/api/rules-engine', rulesEngineRouter);
 
 app.use(errorHandler);
 

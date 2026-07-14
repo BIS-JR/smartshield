@@ -4,6 +4,7 @@ import { seedSupplierIntelligence } from './seeds/supplierIntelligence.js';
 import { seedCorporateFraud } from './seeds/corporateFraud.js';
 import { seedPaymentRisk } from './seeds/paymentRisk.js';
 import { seedInvestigation } from './seeds/investigation.js';
+import { seedRulesEngine } from './seeds/rulesEngine.js';
 
 const prisma = new PrismaClient();
 
@@ -82,6 +83,7 @@ async function main() {
   await seedCorporateFraud(prisma);
   await seedPaymentRisk(prisma);
   await seedInvestigation(prisma);
+  await seedRulesEngine(prisma);
 }
 
 main()
