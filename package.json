@@ -15,6 +15,6 @@
     "prisma:studio": "pnpm --filter api exec prisma studio"
   },
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   }
 }

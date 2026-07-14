@@ -10,7 +10,6 @@ services:
     runtime: node
     plan: free
     buildCommand: >
-      corepack enable &&
       pnpm install --frozen-lockfile &&
       pnpm --filter @smartshield/shared build &&
       pnpm --filter api exec prisma generate &&
