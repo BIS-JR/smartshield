@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, LayoutGrid, Menu } from 'lucide-react';
+import { LayoutGrid, Menu } from 'lucide-react';
 import { LiveClock } from './LiveClock';
 import { UserMenuDrawer } from './UserMenuDrawer';
 import { useAuthStore } from '@/stores/authStore';
@@ -12,9 +12,9 @@ export function HeaderBar() {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-3">
-        <ShieldCheck className="h-5 w-5 text-primary" />
+        <img src="/logos/smart-system.png" alt="Smart System" className="h-8 w-auto" />
+        <img src="/logos/smart-shield.png" alt="SmartShield" className="h-8 w-auto" />
         <LiveClock />
-        <span className="hidden text-sm font-semibold text-foreground sm:inline">Smart System</span>
       </div>
 
       <Link
