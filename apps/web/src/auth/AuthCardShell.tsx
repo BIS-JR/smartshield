@@ -19,7 +19,13 @@ export function AuthCardShell({ title, subtitle, icon, children, footer }: AuthC
           {icon ?? <LogIn className="h-6 w-6 text-primary-foreground" />}
         </div>
 
-        <img src="/logos/smart-shield.png" alt="SmartShield" className="h-14 w-auto" />
+        <div className="flex items-center gap-2">
+          <img src="/logos/smart-shield.png" alt="SmartShield" className="h-14 w-auto" />
+          <span className="flex flex-col text-lg font-bold leading-tight text-foreground">
+            <span>Smart</span>
+            <span>Shield</span>
+          </span>
+        </div>
       </div>
 
       <h1 className="text-2xl font-bold text-foreground">{title}</h1>

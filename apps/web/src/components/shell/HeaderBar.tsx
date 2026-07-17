@@ -14,6 +14,7 @@ export function HeaderBar() {
       <div className="flex items-center gap-3">
         <img src="/logos/smart-system.png" alt="Smart System" className="h-8 w-auto" />
         <img src="/logos/smart-shield.png" alt="SmartShield" className="h-8 w-auto" />
+        <span className="whitespace-nowrap text-base font-bold text-foreground">SmartShield</span>
         <LiveClock />
       </div>
 
