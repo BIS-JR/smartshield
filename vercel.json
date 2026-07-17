@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "pnpm --filter @smartshield/shared build && pnpm --filter web build && rm -rf dist && cp -r apps/web/dist dist",
+  "buildCommand": "cd /vercel/path0 && pnpm --filter @smartshield/shared build && pnpm --filter web build && rm -rf dist && cp -r apps/web/dist dist",
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile"
 }
