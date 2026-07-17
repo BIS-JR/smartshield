@@ -13,7 +13,7 @@ function formatDate(iso: string) {
 }
 
 export function DocumentAiListPage() {
-  const [range, setRange] = useState<TimeRange>('24h');
+  const [range, setRange] = useState<TimeRange>('all');
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
 

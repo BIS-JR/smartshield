@@ -2,15 +2,17 @@ import * as repo from './repository.js';
 import { HttpError } from '../../middleware/errorHandler.js';
 
 export async function getSummary() {
-  const since = repo.LAST_24H();
-
+  // Dados de demonstração têm data de criação fixa (definida no seed), então
+  // uma janela "últimas 24h" relativa ao horário atual ficaria zerada assim
+  // que passasse tempo real suficiente desde o seed. Os KPIs mostram o total
+  // histórico das transações simuladas, não um recorte por tempo real.
   const [transactionsToday, blocked, suspicious, activeAutomations, byType, riskDistribution] = await Promise.all([
-    repo.countTransactionsSince(since),
-    repo.countByStatusSince('bloqueada', since),
-    repo.countByStatusSince('suspeita', since),
+    repo.countTransactionsSince(),
+    repo.countByStatusSince('bloqueada'),
+    repo.countByStatusSince('suspeita'),
     repo.countActiveAutomations(),
-    repo.countByType(since),
-    repo.countByRiskLevel(since),
+    repo.countByType(),
+    repo.countByRiskLevel(),
   ]);
 
   return { transactionsToday, blocked, suspicious, activeAutomations, byType, riskDistribution };

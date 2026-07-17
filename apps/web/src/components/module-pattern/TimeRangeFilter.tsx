@@ -1,7 +1,15 @@
 import { cn } from '@/lib/utils';
 
-const RANGES = ['1h', '12h', '24h', '60h'] as const;
+const RANGES = ['1h', '12h', '24h', '60h', 'all'] as const;
 export type TimeRange = (typeof RANGES)[number];
+
+const RANGE_LABEL: Record<TimeRange, string> = {
+  '1h': '1h',
+  '12h': '12h',
+  '24h': '24h',
+  '60h': '60h',
+  all: 'Todos',
+};
 
 interface TimeRangeFilterProps {
   value: TimeRange;
@@ -21,7 +29,7 @@ export function TimeRangeFilter({ value, onChange }: TimeRangeFilterProps) {
             value === range ? 'bg-primary text-primary-foreground' : 'text-muted hover:text-foreground',
           )}
         >
-          {range}
+          {RANGE_LABEL[range]}
         </button>
       ))}
     </div>

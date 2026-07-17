@@ -3,27 +3,35 @@ import type { PaymentType, RiskLevel } from '@prisma/client';
 
 const LAST_24H = () => new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-export async function countTransactionsSince(since: Date) {
-  return prisma.paymentTransaction.count({ where: { createdAt: { gte: since } } });
+export async function countTransactionsSince(since?: Date) {
+  return prisma.paymentTransaction.count({ where: since ? { createdAt: { gte: since } } : {} });
 }
 
-export async function countByStatusSince(status: 'bloqueada' | 'suspeita', since: Date) {
-  return prisma.paymentTransaction.count({ where: { status, createdAt: { gte: since } } });
+export async function countByStatusSince(status: 'bloqueada' | 'suspeita', since?: Date) {
+  return prisma.paymentTransaction.count({ where: since ? { status, createdAt: { gte: since } } : { status } });
 }
 
 export async function countActiveAutomations() {
   return prisma.automationTrigger.count({ where: { status: 'confirmed' } });
 }
 
-export async function countByType(since: Date) {
-  const rows = await prisma.paymentTransaction.groupBy({ by: ['type'], where: { createdAt: { gte: since } }, _count: true });
+export async function countByType(since?: Date) {
+  const rows = await prisma.paymentTransaction.groupBy({
+    by: ['type'],
+    where: since ? { createdAt: { gte: since } } : {},
+    _count: true,
+  });
   const counts: Record<PaymentType, number> = { pix: 0, ted: 0, doc: 0, boleto: 0 };
   for (const row of rows) counts[row.type] = row._count;
   return counts;
 }
 
-export async function countByRiskLevel(since: Date) {
-  const rows = await prisma.paymentTransaction.groupBy({ by: ['riskLevel'], where: { createdAt: { gte: since } }, _count: true });
+export async function countByRiskLevel(since?: Date) {
+  const rows = await prisma.paymentTransaction.groupBy({
+    by: ['riskLevel'],
+    where: since ? { createdAt: { gte: since } } : {},
+    _count: true,
+  });
   const counts: Record<RiskLevel, number> = { baixo: 0, medio: 0, alto: 0 };
   for (const row of rows) counts[row.riskLevel] = row._count;
   return counts;
