@@ -1,4 +1,5 @@
 {
+  "framework": "vite",
   "buildCommand": "pnpm --filter @smartshield/shared build && pnpm --filter web build",
   "outputDirectory": "apps/web/dist",
   "installCommand": "pnpm install --frozen-lockfile"
