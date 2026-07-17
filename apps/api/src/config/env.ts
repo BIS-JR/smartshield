@@ -13,6 +13,13 @@ export const env = {
   isProduction: process.env.NODE_ENV === 'production',
   databaseUrl: required('DATABASE_URL'),
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:5173',
+  // Origens extras liberadas no CORS, além de WEB_ORIGIN — útil quando o
+  // frontend roda num domínio separado da API (ex: frontend na Vercel,
+  // API no Render). Lista separada por vírgula.
+  allowedOrigins: (process.env.EXTRA_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET ?? 'dev-access-secret',
     refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'dev-refresh-secret',

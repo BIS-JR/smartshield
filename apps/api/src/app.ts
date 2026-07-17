@@ -26,7 +26,22 @@ const webDistDir = path.join(__dirname, '..', '..', 'web', 'dist');
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: env.webOrigin, credentials: true }));
+  const allowedOrigins = [env.webOrigin, ...env.allowedOrigins];
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Requisições sem "origin" (ex: curl, apps mobile) sempre passam.
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        // callback(null, false) só nega os cabeçalhos de CORS (o navegador
+        // bloqueia a leitura da resposta do lado dele); não é um erro do
+        // servidor, então não deve virar 500 nem poluir os logs.
+        callback(null, false);
+      },
+      credentials: true,
+    }),
+  );
   app.use(express.json());
   app.use(cookieParser());
 

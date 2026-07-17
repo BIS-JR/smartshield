@@ -1,8 +1,14 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
+// Em produção "tudo junto" (Render), o frontend é servido pelo mesmo
+// domínio da API, então '/api' relativo já funciona. Quando o frontend
+// está num domínio separado (ex: Vercel), defina VITE_API_URL apontando
+// para a API completa (ex: https://smartshield-xxxx.onrender.com/api).
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
+
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 

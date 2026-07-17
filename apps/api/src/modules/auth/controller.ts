@@ -14,7 +14,10 @@ function meta(req: Request) {
 function setRefreshCookie(res: Response, token: string) {
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
-    sameSite: 'lax',
+    // 'none' é necessário para o cookie ser enviado quando o frontend está
+    // num domínio diferente da API (ex: Vercel + Render); exige Secure.
+    // Em dev local (http, mesmo domínio/porta) usamos 'lax' sem Secure.
+    sameSite: env.isProduction ? 'none' : 'lax',
     secure: env.isProduction,
     path: '/api/auth',
     maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -82,7 +85,11 @@ export async function logoutHandler(req: Request, res: Response) {
   if (token) {
     await revokeRefreshToken(token);
   }
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth', secure: env.isProduction, sameSite: 'lax' });
+  res.clearCookie(REFRESH_COOKIE, {
+    path: '/api/auth',
+    secure: env.isProduction,
+    sameSite: env.isProduction ? 'none' : 'lax',
+  });
   if (req.userId) {
     const { logAuthEvent } = await import('./authEvents.js');
     await logAuthEvent('logout', { userId: req.userId, ...meta(req) });
